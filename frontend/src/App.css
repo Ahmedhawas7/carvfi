@@ -427,7 +427,82 @@ input::placeholder {
   font-size: 3rem;
   margin-bottom: 1rem;
   background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-ba
+    /* Auth Background */
+.auth-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.welcome-content {
+  text-align: center;
+  color: white;
+  z-index: 2;
+}
+
+.welcome-content h1 {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
   -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.welcome-content p {
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  margin-bottom: 3rem;
+}
+
+.welcome-features {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.feature {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  padding: 1rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.feature:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+/* Ensure modal is on top */
+.modal-overlay {
+  z-index: 10000 !important;
+}
+
+/* Ensure main content is visible */
+.main-content {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Safe guards for content visibility */
+.app > *:not(.modal-overlay) {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}ckground-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
