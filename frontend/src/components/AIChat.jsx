@@ -5,6 +5,7 @@ const AIChat = ({ user, onClose }) => {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   useEffect(() => {
     // تحميل المحادثة من localStorage إذا موجودة
@@ -25,7 +26,12 @@ const AIChat = ({ user, onClose }) => {
   }, [user.address]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ 
+        behavior: "smooth",
+        block: "end"
+      });
+    }, 100);
   };
 
   useEffect(() => {
@@ -174,7 +180,7 @@ const AIChat = ({ user, onClose }) => {
         </div>
       </div>
 
-      <div className="ai-chat-messages">
+      <div className="ai-chat-messages" ref={messagesContainerRef}>
         {messages.map(message => (
           <div key={message.id} className={`message ${message.sender}`}>
             <div className="message-content">
@@ -204,7 +210,13 @@ const AIChat = ({ user, onClose }) => {
                 <button
                   key={index}
                   className="reply-btn"
-                  onClick={() => setInputMessage(reply)}
+                  onClick={() => {
+                    setInputMessage(reply);
+                    // التركيز على حقل الإدخال بعد اختيار رد سريع
+                    setTimeout(() => {
+                      document.querySelector('.ai-chat-input input')?.focus();
+                    }, 100);
+                  }}
                   disabled={isLoading}
                 >
                   {reply}
@@ -225,6 +237,7 @@ const AIChat = ({ user, onClose }) => {
           onKeyPress={handleKeyPress}
           placeholder="Type your message... (Press Enter to send)"
           disabled={isLoading}
+          autoFocus
         />
         <button 
           className="btn btn-send"
