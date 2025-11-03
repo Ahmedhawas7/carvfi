@@ -69,9 +69,20 @@ const UserProfile = () => {
 
   return (
     <div className="main-content">
-      <div className="card">
-        <h2 style={{ marginBottom: '0.5rem', color: 'var(--text-primary)' }}>الملف الشخصي</h2>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+      <div className="card" style={{ background: 'white', border: '1px solid #e5e7eb' }}>
+        <h2 style={{ 
+          marginBottom: '0.5rem', 
+          color: '#1f2937',
+          fontSize: '1.5rem',
+          fontWeight: '700'
+        }}>
+          الملف الشخصي
+        </h2>
+        <p style={{ 
+          color: '#6b7280', 
+          marginBottom: '2rem',
+          fontSize: '0.9rem'
+        }}>
           إدارة معلومات حسابك وتخصيص ظهورك في المنصة
         </p>
         
@@ -79,12 +90,19 @@ const UserProfile = () => {
           {/* صورة الملف الشخصي */}
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
             <div style={{ position: 'relative', display: 'inline-block' }}>
-              <div className="avatar" style={{ 
+              <div style={{ 
                 width: '100px', 
                 height: '100px',
-                background: profile.avatar ? 'transparent' : 'var(--primary)',
+                background: profile.avatar ? 'transparent' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 fontSize: '2.5rem',
-                marginBottom: '1rem'
+                color: 'white',
+                marginBottom: '1rem',
+                border: '4px solid white',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
               }}>
                 {profile.avatar ? (
                   <img 
@@ -103,13 +121,17 @@ const UserProfile = () => {
                   position: 'absolute',
                   bottom: '10px',
                   right: '10px',
-                  background: 'var(--primary)',
+                  background: '#6366f1',
                   color: 'white',
                   padding: '0.5rem',
                   borderRadius: '50%',
                   cursor: 'pointer',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  border: '2px solid white',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
                 }}
+                onMouseOver={(e) => e.target.style.background = '#4f46e5'}
+                onMouseOut={(e) => e.target.style.background = '#6366f1'}
               >
                 📷
                 <input
@@ -121,15 +143,21 @@ const UserProfile = () => {
                 />
               </label>
             </div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+            <p style={{ fontSize: '0.8rem', color: '#6b7280' }}>
               انقر على الأيقونة لتغيير الصورة
             </p>
           </div>
 
           {/* معلومات الأساسية */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '0.5rem', 
+                color: '#374151', 
+                fontSize: '0.9rem',
+                fontWeight: '500'
+              }}>
                 اسم المستخدم *
               </label>
               <input
@@ -138,12 +166,29 @@ const UserProfile = () => {
                 onChange={(e) => handleInputChange('username', e.target.value)}
                 placeholder="ادخل اسم المستخدم"
                 required
-                style={{ width: '100%' }}
+                style={{ 
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '0.9rem',
+                  color: '#1f2937',
+                  background: 'white',
+                  transition: 'all 0.3s ease'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
               />
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '0.5rem', 
+                color: '#374151', 
+                fontSize: '0.9rem',
+                fontWeight: '500'
+              }}>
                 البريد الإلكتروني *
               </label>
               <input
@@ -152,14 +197,31 @@ const UserProfile = () => {
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 placeholder="ادخل بريدك الإلكتروني"
                 required
-                style={{ width: '100%' }}
+                style={{ 
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '0.9rem',
+                  color: '#1f2937',
+                  background: 'white',
+                  transition: 'all 0.3s ease'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
               />
             </div>
           </div>
 
           {/* عنوان المحفظة */}
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '0.5rem', 
+              color: '#374151', 
+              fontSize: '0.9rem',
+              fontWeight: '500'
+            }}>
               عنوان المحفظة (Web3)
             </label>
             <div style={{ position: 'relative' }}>
@@ -168,19 +230,24 @@ const UserProfile = () => {
                 value={profile.walletAddress}
                 readOnly
                 style={{ 
-                  width: '100%', 
-                  backgroundColor: 'var(--glass)',
-                  color: 'var(--text-secondary)',
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '0.9rem',
+                  color: '#6b7280',
+                  background: '#f9fafb',
                   cursor: 'not-allowed'
                 }}
               />
               <div style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }}>
                 <span style={{ 
                   fontSize: '0.7rem', 
-                  background: 'var(--success)', 
+                  background: '#10b981', 
                   color: 'white', 
-                  padding: '0.2rem 0.5rem', 
-                  borderRadius: '6px' 
+                  padding: '0.3rem 0.6rem', 
+                  borderRadius: '6px',
+                  fontWeight: '600'
                 }}>
                   متصل
                 </span>
@@ -190,7 +257,13 @@ const UserProfile = () => {
 
           {/* السيرة الذاتية */}
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '0.5rem', 
+              color: '#374151', 
+              fontSize: '0.9rem',
+              fontWeight: '500'
+            }}>
               السيرة الذاتية
             </label>
             <textarea
@@ -198,19 +271,43 @@ const UserProfile = () => {
               onChange={(e) => handleInputChange('bio', e.target.value)}
               rows={3}
               placeholder="اخبرنا عن نفسك وخبراتك..."
-              style={{ width: '100%', resize: 'vertical' }}
+              style={{ 
+                width: '100%', 
+                resize: 'vertical',
+                padding: '0.75rem 1rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                fontSize: '0.9rem',
+                color: '#1f2937',
+                background: 'white',
+                transition: 'all 0.3s ease',
+                fontFamily: 'inherit'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
             />
           </div>
 
           {/* حسابات التواصل الاجتماعي */}
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ color: 'var(--text-primary)', marginBottom: '1rem', fontSize: '1rem' }}>
+            <h3 style={{ 
+              color: '#1f2937', 
+              marginBottom: '1rem', 
+              fontSize: '1.1rem',
+              fontWeight: '600'
+            }}>
               حسابات التواصل الاجتماعي
             </h3>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '0.5rem', 
+                  color: '#374151', 
+                  fontSize: '0.9rem',
+                  fontWeight: '500'
+                }}>
                   الموقع الإلكتروني
                 </label>
                 <input
@@ -218,13 +315,30 @@ const UserProfile = () => {
                   value={profile.website}
                   onChange={(e) => handleInputChange('website', e.target.value)}
                   placeholder="https://example.com"
-                  style={{ width: '100%' }}
+                  style={{ 
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    color: '#1f2937',
+                    background: 'white',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                  onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.5rem', 
+                    color: '#374151', 
+                    fontSize: '0.9rem',
+                    fontWeight: '500'
+                  }}>
                     Twitter
                   </label>
                   <input
@@ -232,12 +346,29 @@ const UserProfile = () => {
                     value={profile.twitter}
                     onChange={(e) => handleInputChange('twitter', e.target.value)}
                     placeholder="اسم المستخدم"
-                    style={{ width: '100%' }}
+                    style={{ 
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '0.9rem',
+                      color: '#1f2937',
+                      background: 'white',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.5rem', 
+                    color: '#374151', 
+                    fontSize: '0.9rem',
+                    fontWeight: '500'
+                  }}>
                     GitHub
                   </label>
                   <input
@@ -245,7 +376,18 @@ const UserProfile = () => {
                     value={profile.github}
                     onChange={(e) => handleInputChange('github', e.target.value)}
                     placeholder="اسم المستخدم"
-                    style={{ width: '100%' }}
+                    style={{ 
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '0.9rem',
+                      color: '#1f2937',
+                      background: 'white',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                   />
                 </div>
               </div>
@@ -256,19 +398,39 @@ const UserProfile = () => {
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
             <button
               type="button"
-              className="btn"
-              style={{ background: 'transparent' }}
+              style={{ 
+                padding: '0.75rem 1.5rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                background: 'white',
+                color: '#374151',
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseOver={(e) => e.target.style.background = '#f9fafb'}
+              onMouseOut={(e) => e.target.style.background = 'white'}
             >
               إلغاء
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="btn"
               style={{ 
-                background: isLoading ? 'var(--text-secondary)' : 'var(--primary)',
-                minWidth: '120px'
+                padding: '0.75rem 1.5rem',
+                border: 'none',
+                borderRadius: '8px',
+                background: isLoading ? '#9ca3af' : '#6366f1',
+                color: 'white',
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                transition: 'all 0.3s ease',
+                minWidth: '140px'
               }}
+              onMouseOver={(e) => !isLoading && (e.target.style.background = '#4f46e5')}
+              onMouseOut={(e) => !isLoading && (e.target.style.background = '#6366f1')}
             >
               {isLoading ? 'جاري الحفظ...' : 'حفظ التغييرات'}
             </button>
@@ -278,13 +440,14 @@ const UserProfile = () => {
           {saveStatus === 'success' && (
             <div style={{
               marginTop: '1rem',
-              padding: '0.8rem',
-              background: 'rgba(16, 185, 129, 0.1)',
-              border: '1px solid var(--success)',
-              color: 'var(--success)',
+              padding: '1rem',
+              background: '#ecfdf5',
+              border: '1px solid #10b981',
+              color: '#065f46',
               borderRadius: '8px',
               textAlign: 'center',
-              fontSize: '0.8rem'
+              fontSize: '0.9rem',
+              fontWeight: '500'
             }}>
               ✓ تم حفظ التغييرات بنجاح
             </div>
@@ -293,13 +456,14 @@ const UserProfile = () => {
           {saveStatus === 'error' && (
             <div style={{
               marginTop: '1rem',
-              padding: '0.8rem',
-              background: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid var(--error)',
-              color: 'var(--error)',
+              padding: '1rem',
+              background: '#fef2f2',
+              border: '1px solid #ef4444',
+              color: '#991b1b',
               borderRadius: '8px',
               textAlign: 'center',
-              fontSize: '0.8rem'
+              fontSize: '0.9rem',
+              fontWeight: '500'
             }}>
               ✗ حدث خطأ أثناء الحفظ، يرجى المحاولة مرة أخرى
             </div>
