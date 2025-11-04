@@ -9,7 +9,7 @@ import './App.css';
 function App() {
   const [user, setUser] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(true);
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState('dashboard'); // تغيير إلى 'dashboard'
   const [showAIChat, setShowAIChat] = useState(false);
 
   useEffect(() => {
@@ -100,20 +100,20 @@ function App() {
       </header>
 
       <nav className="navigation">
-        {['profile', 'rewards', 'protection'].map(tab => (
+        {['dashboard', 'profile', 'protection'].map(tab => (
           <button
             key={tab}
             className={`nav-btn ${activeTab === tab ? 'active' : ''}`}
             onClick={() => setActiveTab(tab)}
           >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {tab === 'dashboard' ? 'Dashboard' : tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
       </nav>
 
       <main className="main-content">
+        {activeTab === 'dashboard' && <RewardsDashboard user={user} />}
         {activeTab === 'profile' && <UserProfile user={user} />}
-        {activeTab === 'rewards' && <RewardsDashboard user={user} />}
         {activeTab === 'protection' && <BotProtection user={user} />}
       </main>
 
