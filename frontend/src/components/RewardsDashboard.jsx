@@ -1,79 +1,614 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const RewardsDashboard = ({ user }) => {
-  const [rewards] = useState([
-    { id: 1, type: 'ai_chat', points: 10, description: 'AI Chat Session', claimed: true },
-    { id: 2, type: 'profile', points: 5, description: 'Profile Update', claimed: true },
-    { id: 3, type: 'wallet', points: 25, description: 'Wallet Connection', claimed: true },
-    { id: 4, type: 'social', points: 15, description: 'Social Interaction', claimed: false },
-    { id: 5, type: 'nft', points: 50, description: 'NFT Display', claimed: false }
+const Dashboard = () => {
+  const [userData, setUserData] = useState({
+    points: 1250,
+    streak: 7,
+    level: 3,
+    walletConnected: true
+  });
+
+  const [dailyTasks, setDailyTasks] = useState([
+    {
+      id: 1,
+      title: "Daily Login",
+      description: "Visit the platform daily",
+      points: 50,
+      completed: true,
+      type: "login"
+    },
+    {
+      id: 2,
+      title: "Twitter Post",
+      description: "Share about CarVFi on Twitter",
+      points: 100,
+      completed: false,
+      type: "social"
+    },
+    {
+      id: 3,
+      title: "Follow Account",
+      description: "Follow our official Twitter account",
+      points: 75,
+      completed: false,
+      type: "social"
+    },
+    {
+      id: 4,
+      title: "SVM Transaction",
+      description: "Make a transaction on SVM Testnet",
+      points: 200,
+      completed: false,
+      type: "transaction"
+    }
   ]);
 
-  const totalPoints = rewards.reduce((sum, reward) => sum + reward.points, 0);
-  const claimedPoints = rewards.filter(r => r.claimed).reduce((sum, reward) => sum + reward.points, 0);
+  const [userActivities, setUserActivities] = useState([
+    {
+      id: 1,
+      type: "post",
+      platform: "twitter",
+      content: "Just joined CarVFi Web3 Social Platform! 🚀",
+      points: 50,
+      timestamp: "2024-01-15 14:30"
+    },
+    {
+      id: 2,
+      type: "transaction",
+      platform: "svm",
+      content: "SVM Testnet transaction completed",
+      points: 100,
+      timestamp: "2024-01-15 12:15"
+    },
+    {
+      id: 3,
+      type: "login",
+      platform: "system",
+      content: "Daily login reward claimed",
+      points: 25,
+      timestamp: "2024-01-15 09:00"
+    },
+    {
+      id: 4,
+      type: "follow",
+      platform: "twitter",
+      content: "Followed CarVFi official account",
+      points: 75,
+      timestamp: "2024-01-14 16:45"
+    }
+  ]);
+
+  const [walletTransactions, setWalletTransactions] = useState([
+    {
+      id: 1,
+      type: "send",
+      amount: "0.5 SVM",
+      to: "0x742d...5a3b",
+      status: "completed",
+      timestamp: "2024-01-15 14:30"
+    },
+    {
+      id: 2,
+      type: "receive",
+      amount: "1.2 SVM",
+      from: "0x8f2c...9d1e",
+      status: "completed",
+      timestamp: "2024-01-15 11:20"
+    },
+    {
+      id: 3,
+      type: "swap",
+      amount: "2.0 SVM",
+      status: "pending",
+      timestamp: "2024-01-15 10:15"
+    }
+  ]);
+
+  const completeTask = (taskId) => {
+    setDailyTasks(tasks =>
+      tasks.map(task =>
+        task.id === taskId ? { ...task, completed: true } : task
+      )
+    );
+
+    const task = dailyTasks.find(t => t.id === taskId);
+    if (task) {
+      setUserData(prev => ({
+        ...prev,
+        points: prev.points + task.points
+      }));
+
+      // Add to activities
+      const newActivity = {
+        id: Date.now(),
+        type: task.type,
+        platform: task.type === 'login' ? 'system' : 'twitter',
+        content: `Completed: ${task.title}`,
+        points: task.points,
+        timestamp: new Date().toLocaleString('en-US')
+      };
+
+      setUserActivities(prev => [newActivity, ...prev]);
+    }
+  };
+
+  const claimDailyLogin = () => {
+    const loginTask = dailyTasks.find(task => task.type === 'login');
+    if (loginTask && !loginTask.completed) {
+      completeTask(loginTask.id);
+      setUserData(prev => ({
+        ...prev,
+        streak: prev.streak + 1
+      }));
+    }
+  };
+
+  // Auto-complete daily login if not completed
+  useEffect(() => {
+    const loginTask = dailyTasks.find(task => task.type === 'login');
+    if (loginTask && !loginTask.completed) {
+      completeTask(loginTask.id);
+    }
+  }, []);
 
   return (
-    <div className="grid">
-      <div className="card">
-        <div className="stats">
-          <div className="stat">
-            <div className="stat-value">{totalPoints}</div>
-            <div className="stat-label">Total Points</div>
-          </div>
-          <div className="stat">
-            <div className="stat-value">{claimedPoints}</div>
-            <div className="stat-label">Claimed</div>
-          </div>
-          <div className="stat">
-            <div className="stat-value">{rewards.filter(r => !r.claimed).length}</div>
-            <div className="stat-label">Pending</div>
+    <div className="main-content">
+      {/* Stats Overview */}
+      <div className="grid" style={{ marginBottom: '2rem' }}>
+        <div className="card" style={{ background: 'white', border: '1px solid #e5e7eb' }}>
+          <div className="stats">
+            <div className="stat">
+              <div className="stat-value" style={{ color: '#6366f1' }}>{userData.points}</div>
+              <div className="stat-label">Total Points</div>
+            </div>
+            <div className="stat">
+              <div className="stat-value" style={{ color: '#10b981' }}>{userData.streak} days</div>
+              <div className="stat-label">Login Streak</div>
+            </div>
+            <div className="stat">
+              <div className="stat-value" style={{ color: '#8b5cf6' }}>Level {userData.level}</div>
+              <div className="stat-label">User Level</div>
+            </div>
+            <div className="stat">
+              <div className="stat-value" style={{ color: userData.walletConnected ? '#10b981' : '#ef4444' }}>
+                {userData.walletConnected ? 'Connected' : 'Disconnected'}
+              </div>
+              <div className="stat-label">Wallet Status</div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="card">
-        <h3>Available Rewards</h3>
-        <div className="rewards-list">
-          {rewards.filter(reward => !reward.claimed).map(reward => (
-            <div key={reward.id} className="reward-item">
-              <div className="reward-icon">
-                {reward.type === 'ai_chat' && '🤖'}
-                {reward.type === 'profile' && '👤'}
-                {reward.type === 'wallet' && '🔗'}
-                {reward.type === 'social' && '💬'}
-                {reward.type === 'nft' && '🖼️'}
-              </div>
-              <div className="reward-info">
-                <div className="reward-title">{reward.description}</div>
-                <div className="reward-points">+{reward.points} points</div>
-              </div>
-              <button className="btn btn-claim">Claim</button>
-            </div>
-          ))}
-        </div>
-      </div>
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+        
+        {/* Daily Tasks Section */}
+        <div className="card" style={{ background: 'white', border: '1px solid #e5e7eb' }}>
+          <h3 style={{ color: '#1f2937', marginBottom: '1rem', fontSize: '1.2rem', fontWeight: '600' }}>
+            Daily Tasks
+          </h3>
+          <p style={{ color: '#6b7280', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+            Complete daily tasks to earn more points
+          </p>
 
-      <div className="card">
-        <h3>Reward History</h3>
-        <div className="history-list">
-          {rewards.filter(reward => reward.claimed).map(reward => (
-            <div key={reward.id} className="history-item">
-              <div className="history-icon">
-                {reward.type === 'ai_chat' && '🤖'}
-                {reward.type === 'profile' && '👤'}
-                {reward.type === 'wallet' && '🔗'}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {dailyTasks.map(task => (
+              <div
+                key={task.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  padding: '1rem',
+                  background: task.completed ? '#f0fdf4' : '#f8fafc',
+                  border: `1px solid ${task.completed ? '#bbf7d0' : '#e5e7eb'}`,
+                  borderRadius: '12px',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  background: task.completed ? '#10b981' : '#6366f1',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontSize: '1rem',
+                  fontWeight: '600'
+                }}>
+                  {task.completed ? '✓' : '+'}
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    marginBottom: '0.3rem'
+                  }}>
+                    <h4 style={{ 
+                      color: '#1f2937', 
+                      fontSize: '0.95rem', 
+                      fontWeight: '600',
+                      margin: 0
+                    }}>
+                      {task.title}
+                    </h4>
+                    <span style={{
+                      background: '#6366f1',
+                      color: 'white',
+                      padding: '0.3rem 0.6rem',
+                      borderRadius: '8px',
+                      fontSize: '0.8rem',
+                      fontWeight: '600'
+                    }}>
+                      +{task.points} pts
+                    </span>
+                  </div>
+                  <p style={{ 
+                    color: '#6b7280', 
+                    fontSize: '0.8rem', 
+                    margin: 0,
+                    lineHeight: '1.4'
+                  }}>
+                    {task.description}
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => completeTask(task.id)}
+                  disabled={task.completed}
+                  style={{
+                    padding: '0.6rem 1rem',
+                    background: task.completed ? '#d1d5db' : '#6366f1',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '0.8rem',
+                    fontWeight: '500',
+                    cursor: task.completed ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.3s ease',
+                    minWidth: '80px'
+                  }}
+                  onMouseOver={(e) => !task.completed && (e.target.style.background = '#4f46e5')}
+                  onMouseOut={(e) => !task.completed && (e.target.style.background = '#6366f1')}
+                >
+                  {task.completed ? 'Completed' : 'Claim'}
+                </button>
               </div>
-              <div className="history-info">
-                <div className="history-title">{reward.description}</div>
-                <div className="history-date">2 days ago</div>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent Activities */}
+        <div className="card" style={{ background: 'white', border: '1px solid #e5e7eb' }}>
+          <h3 style={{ color: '#1f2937', marginBottom: '1rem', fontSize: '1.2rem', fontWeight: '600' }}>
+            Recent Activities
+          </h3>
+          <p style={{ color: '#6b7280', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+            Your recent interactions and rewards
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '400px', overflowY: 'auto' }}>
+            {userActivities.map(activity => (
+              <div
+                key={activity.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '1rem',
+                  padding: '1rem',
+                  background: '#f8fafc',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '12px',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  background: getActivityColor(activity.type),
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontSize: '0.8rem',
+                  fontWeight: '600'
+                }}>
+                  {getActivityIcon(activity.type)}
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'flex-start',
+                    marginBottom: '0.3rem'
+                  }}>
+                    <div>
+                      <h4 style={{ 
+                        color: '#1f2937', 
+                        fontSize: '0.9rem', 
+                        fontWeight: '600',
+                        margin: '0 0 0.2rem 0'
+                      }}>
+                        {activity.content}
+                      </h4>
+                      <p style={{ 
+                        color: '#6b7280', 
+                        fontSize: '0.75rem', 
+                        margin: 0
+                      }}>
+                        {activity.timestamp}
+                      </p>
+                    </div>
+                    <span style={{
+                      background: '#10b981',
+                      color: 'white',
+                      padding: '0.2rem 0.5rem',
+                      borderRadius: '6px',
+                      fontSize: '0.75rem',
+                      fontWeight: '600'
+                    }}>
+                      +{activity.points}
+                    </span>
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    marginTop: '0.5rem'
+                  }}>
+                    <span style={{
+                      background: '#f3f4f6',
+                      color: '#6b7280',
+                      padding: '0.2rem 0.5rem',
+                      borderRadius: '6px',
+                      fontSize: '0.7rem',
+                      fontWeight: '500'
+                    }}>
+                      {activity.platform}
+                    </span>
+                    <span style={{
+                      background: '#f3f4f6',
+                      color: '#6b7280',
+                      padding: '0.2rem 0.5rem',
+                      borderRadius: '6px',
+                      fontSize: '0.7rem',
+                      fontWeight: '500'
+                    }}>
+                      {activity.type}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="history-points">+{reward.points}</div>
-            </div>
-          ))}
+            ))}
+          </div>
+        </div>
+
+        {/* Wallet Transactions */}
+        <div className="card" style={{ background: 'white', border: '1px solid #e5e7eb' }}>
+          <h3 style={{ color: '#1f2937', marginBottom: '1rem', fontSize: '1.2rem', fontWeight: '600' }}>
+            SVM Wallet Transactions
+          </h3>
+          <p style={{ color: '#6b7280', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+            Recent transactions on SVM Testnet
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {walletTransactions.map(transaction => (
+              <div
+                key={transaction.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  padding: '1rem',
+                  background: '#f8fafc',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '12px'
+                }}
+              >
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  background: getTransactionColor(transaction.type),
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontSize: '0.8rem',
+                  fontWeight: '600'
+                }}>
+                  {getTransactionIcon(transaction.type)}
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    marginBottom: '0.3rem'
+                  }}>
+                    <h4 style={{ 
+                      color: '#1f2937', 
+                      fontSize: '0.9rem', 
+                      fontWeight: '600',
+                      margin: 0
+                    }}>
+                      {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)} 
+                      {transaction.to && ` to ${transaction.to}`}
+                      {transaction.from && ` from ${transaction.from}`}
+                    </h4>
+                    <span style={{
+                      color: transaction.type === 'receive' ? '#10b981' : '#1f2937',
+                      fontSize: '0.9rem',
+                      fontWeight: '600'
+                    }}>
+                      {transaction.amount}
+                    </span>
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center'
+                  }}>
+                    <p style={{ 
+                      color: '#6b7280', 
+                      fontSize: '0.75rem', 
+                      margin: 0
+                    }}>
+                      {transaction.timestamp}
+                    </p>
+                    <span style={{
+                      background: transaction.status === 'completed' ? '#ecfdf5' : '#fef3c7',
+                      color: transaction.status === 'completed' ? '#065f46' : '#92400e',
+                      padding: '0.2rem 0.5rem',
+                      borderRadius: '6px',
+                      fontSize: '0.7rem',
+                      fontWeight: '500'
+                    }}>
+                      {transaction.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="card" style={{ background: 'white', border: '1px solid #e5e7eb' }}>
+          <h3 style={{ color: '#1f2937', marginBottom: '1rem', fontSize: '1.2rem', fontWeight: '600' }}>
+            Quick Actions
+          </h3>
+          <p style={{ color: '#6b7280', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+            Common actions to earn points
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+            <button
+              style={{
+                padding: '0.8rem 1rem',
+                background: '#6366f1',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                textAlign: 'left'
+              }}
+              onMouseOver={(e) => e.target.style.background = '#4f46e5'}
+              onMouseOut={(e) => e.target.style.background = '#6366f1'}
+            >
+              📱 Connect Twitter Account
+            </button>
+
+            <button
+              style={{
+                padding: '0.8rem 1rem',
+                background: '#8b5cf6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                textAlign: 'left'
+              }}
+              onMouseOver={(e) => e.target.style.background = '#7c3aed'}
+              onMouseOut={(e) => e.target.style.background = '#8b5cf6'}
+            >
+              🔗 Make SVM Transaction
+            </button>
+
+            <button
+              style={{
+                padding: '0.8rem 1rem',
+                background: '#10b981',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                textAlign: 'left'
+              }}
+              onMouseOver={(e) => e.target.style.background = '#059669'}
+              onMouseOut={(e) => e.target.style.background = '#10b981'}
+            >
+              🎯 Claim Daily Bonus
+            </button>
+
+            <button
+              style={{
+                padding: '0.8rem 1rem',
+                background: '#f59e0b',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                textAlign: 'left'
+              }}
+              onMouseOver={(e) => e.target.style.background = '#d97706'}
+              onMouseOut={(e) => e.target.style.background = '#f59e0b'}
+            >
+              📊 View Leaderboard
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default RewardsDashboard;
+// Helper functions
+const getActivityColor = (type) => {
+  switch (type) {
+    case 'post': return '#6366f1';
+    case 'transaction': return '#8b5cf6';
+    case 'login': return '#10b981';
+    case 'follow': return '#f59e0b';
+    default: return '#6b7280';
+  }
+};
+
+const getActivityIcon = (type) => {
+  switch (type) {
+    case 'post': return '📝';
+    case 'transaction': return '💸';
+    case 'login': return '🔐';
+    case 'follow': return '👥';
+    default: return '📌';
+  }
+};
+
+const getTransactionColor = (type) => {
+  switch (type) {
+    case 'send': return '#ef4444';
+    case 'receive': return '#10b981';
+    case 'swap': return '#f59e0b';
+    default: return '#6b7280';
+  }
+};
+
+const getTransactionIcon = (type) => {
+  switch (type) {
+    case 'send': return '⬆️';
+    case 'receive': return '⬇️';
+    case 'swap': return '🔄';
+    default: return '📌';
+  }
+};
+
+export default Dashboard;
