@@ -1,4 +1,4 @@
-/* CARVFi v3.0 - Dark Violet Theme */
+/* CARVFi v3.1 - Dark Glass Theme */
 :root {
   --primary: #7c3aed;
   --primary-dark: #6d28d9;
@@ -8,14 +8,15 @@
   --dark: #0f0f23;
   --darker: #090917;
   --dark-light: #1a1a2e;
+  --glass-dark: rgba(30, 30, 46, 0.8);
+  --glass-light: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.15);
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
   --text-muted: #94a3b8;
   --success: #10b981;
   --warning: #f59e0b;
   --error: #ef4444;
-  --glass: rgba(124, 58, 237, 0.1);
-  --glass-border: rgba(124, 58, 237, 0.2);
 }
 
 * {
@@ -81,7 +82,7 @@ body {
 }
 
 .feature {
-  background: var(--glass);
+  background: var(--glass-dark);
   backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
   padding: 1rem;
@@ -103,7 +104,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background: var(--dark-light);
+  background: var(--glass-dark);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--glass-border);
 }
@@ -152,7 +153,7 @@ body {
 
 /* Buttons */
 .btn {
-  background: var(--glass);
+  background: var(--glass-dark);
   color: var(--text-primary);
   border: 1px solid var(--glass-border);
   padding: 0.6rem 1.2rem;
@@ -193,7 +194,7 @@ body {
   display: flex;
   gap: 0.5rem;
   padding: 1rem 2rem;
-  background: var(--dark-light);
+  background: var(--glass-dark);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--glass-border);
 }
@@ -212,7 +213,7 @@ body {
 
 .nav-btn:hover {
   color: var(--text-primary);
-  background: var(--glass);
+  background: var(--glass-light);
 }
 
 .nav-btn.active {
@@ -231,20 +232,22 @@ body {
   visibility: visible;
 }
 
-/* Cards */
+/* Cards - Glass Effect */
 .card {
-  background: var(--dark-light);
+  background: var(--glass-dark);
   backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
   border-radius: 16px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   transition: all 0.3s ease;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .card:hover {
   border-color: var(--primary);
   transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
 /* Grid */
@@ -264,9 +267,10 @@ body {
 .stat {
   text-align: center;
   padding: 1rem;
-  background: var(--glass);
+  background: var(--glass-light);
   border-radius: 12px;
   border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
 }
 
 .stat-value {
@@ -287,18 +291,19 @@ body {
 input, textarea {
   width: 100%;
   padding: 0.8rem;
-  background: var(--dark);
+  background: var(--glass-dark);
   border: 1px solid var(--glass-border);
   border-radius: 8px;
   color: var(--text-primary);
   font-size: 0.8rem;
   transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
 }
 
 input:focus, textarea:focus {
   outline: none;
   border-color: var(--primary);
-  background: rgba(124, 58, 237, 0.05);
+  background: rgba(124, 58, 237, 0.1);
 }
 
 input::placeholder {
@@ -344,7 +349,19 @@ input::placeholder {
   font-weight: 600;
 }
 
-/* AI Chat - Updated for Dark Theme */
+/* Task Items */
+.task-item {
+  background: var(--glass-light);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+}
+
+.task-item.completed {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+/* AI Chat - Glass Effect */
 .ai-chat-wrapper {
   position: fixed;
   top: 50%;
@@ -354,7 +371,7 @@ input::placeholder {
   max-width: 600px;
   height: 85vh;
   max-height: 700px;
-  background: var(--dark-light);
+  background: var(--glass-dark);
   backdrop-filter: blur(40px);
   border: 1px solid var(--glass-border);
   border-radius: 20px;
@@ -363,6 +380,37 @@ input::placeholder {
   flex-direction: column;
   box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
   overflow: hidden;
+}
+
+/* Message Bubbles */
+.message {
+  background: var(--glass-light);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+}
+
+.message.user {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border: none;
+}
+
+/* Quick Replies */
+.quick-replies {
+  background: var(--glass-dark);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+}
+
+.reply-btn {
+  background: var(--glass-light);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  backdrop-filter: blur(10px);
+}
+
+.reply-btn:hover {
+  background: var(--primary);
+  border-color: var(--primary);
 }
 
 /* Responsive Design */
@@ -402,4 +450,23 @@ input::placeholder {
   .user-info {
     align-items: center;
   }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--glass-dark);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-light);
 }
