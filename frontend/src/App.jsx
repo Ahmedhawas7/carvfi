@@ -1,104 +1,296 @@
-// frontend/src/App.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AuthModal from './components/AuthModal';
+import UserProfile from './components/UserProfile';
+import AIChat from './components/AIChat';
+import RewardsDashboard from './components/RewardsDashboard';
+import BotProtection from './components/BotProtection';
 import './App.css';
 
-// Header component with connect button
-const Header = () => {
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+// خدمة تخزين محلية محسنة
+const StorageService = {
+  // حفظ بيانات المستخدم مع جميع الإحصائيات
+  saveUser: (userData) => {
+    const users = JSON.parse(localStorage.getItem('carvfi_users') || '{}');
+    const userKey = userData.walletAddress?.toLowerCase();
+    
+    if (users[userKey]) {
+      // تحديث المستخدم الموجود
+      users[userKey] = {
+        ...users[userKey],
+        ...userData,
+        lastUpdated: new Date().toISOString()
+      };
+    } else {
+      // إنشاء مستخدم جديد
+      users[userKey] = {
+        ...userData,
+        points: 0,
+        streak: 1,
+        level: 1,
+        loginCount: 1,
+        lastLogin: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
+      };
+    }
+    
+    localStorage.setItem('carvfi_users', JSON.stringify(users));
+    localStorage.setItem('carvfi_current_user', JSON.stringify(users[userKey]));
+  },
 
-  return (
-    <header className="bg-white shadow-sm border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <div className="flex items-center">
-            <h1 className="text-xl font-bold text-gray-900">CARVFi</h1>
-            <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-              SocialFi
-            </span>
-          </div>
+  // جلب بيانات المستخدم
+  getUser: (walletAddress) => {
+    const users = JSON.parse(localStorage.getItem('carvfi_users') || '{}');
+    return users[walletAddress?.toLowerCase()];
+  },
 
-          {/* Connect Button */}
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => setIsAuthModalOpen(true)}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-            >
-              Connect Wallet
-            </button>
+  // جلب المستخدم الحالي
+  getCurrentUser: () => {
+    return JSON.parse(localStorage.getItem('carvfi_current_user') || 'null');
+  },
+
+  // حفظ النشاطات
+  saveActivity: (walletAddress, activity) => {
+    const activities = JSON.parse(localStorage.getItem('carvfi_activities') || '{}');
+    const userKey = walletAddress?.toLowerCase();
+    
+    if (!activities[userKey]) {
+      activities[userKey] = [];
+    }
+    
+    activities[userKey].unshift({
+      id: Date.now().toString(),
+      ...activity,
+      timestamp: new Date().toISOString()
+    });
+    
+    // حفظ آخر 50 نشاط فقط
+    activities[userKey] = activities[userKey].slice(0, 50);
+    localStorage.setItem('carvfi_activities', JSON.stringify(activities));
+  },
+
+  // جلب النشاطات
+  getActivities: (walletAddress) => {
+    const activities = JSON.parse(localStorage.getItem('carvfi_activities') || '{}');
+    return activities[walletAddress?.toLowerCase()] || [];
+  },
+
+  // تحديث النقاط
+  updatePoints: (walletAddress, pointsToAdd) => {
+    const users = JSON.parse(localStorage.getItem('carvfi_users') || '{}');
+    const userKey = walletAddress?.toLowerCase();
+    
+    if (users[userKey]) {
+      users[userKey].points = (users[userKey].points || 0) + pointsToAdd;
+      users[userKey].lastUpdated = new Date().toISOString();
+      localStorage.setItem('carvfi_users', JSON.stringify(users));
+      
+      // تحديث المستخدم الحالي أيضاً
+      const currentUser = StorageService.getCurrentUser();
+      if (currentUser && currentUser.walletAddress?.toLowerCase() === userKey) {
+        currentUser.points = users[userKey].points;
+        localStorage.setItem('carvfi_current_user', JSON.stringify(currentUser));
+      }
+      
+      return users[userKey].points;
+    }
+    return 0;
+  },
+
+  // تحديث streak
+  updateStreak: (walletAddress) => {
+    const users = JSON.parse(localStorage.getItem('carvfi_users') || '{}');
+    const userKey = walletAddress?.toLowerCase();
+    
+    if (users[userKey]) {
+      const today = new Date().toDateString();
+      const lastLogin = users[userKey].lastLogin ? new Date(users[userKey].lastLogin).toDateString() : null;
+      
+      if (lastLogin !== today) {
+        users[userKey].streak = (users[userKey].streak || 0) + 1;
+        users[userKey].lastLogin = new Date().toISOString();
+        users[userKey].loginCount = (users[userKey].loginCount || 0) + 1;
+        localStorage.setItem('carvfi_users', JSON.stringify(users));
+        
+        // تحديث المستخدم الحالي
+        const currentUser = StorageService.getCurrentUser();
+        if (currentUser && currentUser.walletAddress?.toLowerCase() === userKey) {
+          currentUser.streak = users[userKey].streak;
+          currentUser.lastLogin = users[userKey].lastLogin;
+          currentUser.loginCount = users[userKey].loginCount;
+          localStorage.setItem('carvfi_current_user', JSON.stringify(currentUser));
+        }
+        
+        return users[userKey].streak;
+      }
+    }
+    return 0;
+  },
+
+  // الحصول على جميع المستخدمين (للتطوير)
+  getAllUsers: () => {
+    return JSON.parse(localStorage.getItem('carvfi_users') || '{}');
+  }
+};
+
+function App() {
+  const [user, setUser] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(true);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [showAIChat, setShowAIChat] = useState(false);
+
+  useEffect(() => {
+    const savedUser = StorageService.getCurrentUser();
+    if (savedUser) {
+      // تحديث streak عند الدخول
+      const newStreak = StorageService.updateStreak(savedUser.walletAddress);
+      
+      setUser({
+        ...savedUser,
+        streak: newStreak || savedUser.streak
+      });
+      setShowAuthModal(false);
+      
+      // تسجيل نشاط الدخول
+      if (newStreak > 0) {
+        StorageService.saveActivity(savedUser.walletAddress, {
+          type: 'login',
+          description: `Daily login - Streak: ${newStreak} days`,
+          points: 10
+        });
+        StorageService.updatePoints(savedUser.walletAddress, 10);
+      }
+    }
+  }, []);
+
+  const handleAuthSuccess = (userData) => {
+    console.log('Authentication successful:', userData);
+    
+    const userWithStats = {
+      walletAddress: userData.address,
+      type: userData.type,
+      username: `user_${userData.address.slice(2, 8)}`
+    };
+    
+    // حفظ في التخزين المحلي
+    StorageService.saveUser(userWithStats);
+    
+    // تحديث streak
+    const newStreak = StorageService.updateStreak(userData.address);
+    
+    // تسجيل نشاط الدخول
+    StorageService.saveActivity(userData.address, {
+      type: 'login',
+      description: `User logged in successfully - Streak: ${newStreak} days`,
+      points: 10
+    });
+    
+    // تحديث النقاط
+    const newPoints = StorageService.updatePoints(userData.address, 10);
+    
+    // تحميل بيانات المستخدم المحدثة
+    const updatedUser = StorageService.getUser(userData.address);
+    
+    setUser(updatedUser);
+    setShowAuthModal(false);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('carvfi_current_user');
+    setShowAuthModal(true);
+  };
+
+  if (showAuthModal) {
+    return (
+      <div className="app">
+        <AuthModal 
+          isOpen={true}
+          onClose={() => {}} 
+          onAuthSuccess={handleAuthSuccess}
+        />
+        <div className="auth-background">
+          <div className="welcome-content">
+            <h1>🌐 CARVFi</h1>
+            <p>Web3 Social Platform</p>
+            <div className="welcome-features">
+              <div className="feature">🤖 AI Assistant</div>
+              <div className="feature">💰 Rewards System</div>
+              <div className="feature">🛡️ Bot Protection</div>
+              <div className="feature">🔗 Multi-Chain Support</div>
+            </div>
           </div>
         </div>
       </div>
+    );
+  }
 
-      {/* Auth Modal */}
-      <AuthModal 
-        isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)} 
-      />
-    </header>
-  );
-};
-
-// Main App Content
-const AppContent = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      
-      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        {/* Hero Section */}
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Welcome to CARVFi
-          </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Social Finance Platform - Connect, Socialize, and Earn
-          </p>
+    <div className="app">
+      <header className="header">
+        <div className="header-left">
+          <h1 className="logo">🌐 CARVFi</h1>
+          <p className="tagline">Web3 Social Platform</p>
         </div>
+        
+        <div className="header-right">
+          <div className="user-info">
+            <span className="user-wallet">
+              {user?.walletAddress ? `${user.walletAddress.substring(0, 6)}...${user.walletAddress.substring(38)}` : 'No wallet'}
+            </span>
+            <span className="network-badge">
+              {user?.type === 'evm' ? 'Ethereum' : 'Solana'}
+            </span>
+            <span style={{fontSize: '0.7rem', color: '#10b981', marginTop: '2px'}}>
+              {user?.points || 0} points | Streak: {user?.streak || 0} days
+            </span>
+          </div>
+          <button className="btn btn-logout" onClick={handleLogout}>
+            Logout
+          </button>
+          <button 
+            className="btn btn-ai" 
+            onClick={() => setShowAIChat(!showAIChat)}
+          >
+            🤖 AI
+          </button>
+        </div>
+      </header>
 
-        {/* Wallet Status Card */}
-        <div className="bg-white rounded-lg shadow-sm p-6 max-w-md mx-auto mb-8">
-          <h3 className="text-lg font-semibold mb-4">Wallet Status</h3>
-          <div className="text-center py-4">
-            <p className="text-gray-500 mb-4">Wallet not connected</p>
-            <p className="text-sm text-gray-400">
-              Connect your wallet to start using CARVFi
-            </p>
-          </div>
-        </div>
+      <nav className="navigation">
+  {['dashboard', 'profile', 'protection', 'ai-assistant'].map(tab => (
+    <button
+      key={tab}
+      className={`nav-btn ${activeTab === tab ? 'active' : ''}`}
+      onClick={() => {
+        if (tab === 'ai-assistant') {
+          setShowAIAssistant(true);
+        } else {
+          setActiveTab(tab);
+        }
+      }}
+    >
+      {tab === 'dashboard' ? 'Dashboard' : 
+       tab === 'ai-assistant' ? 'AI Assistant' : 
+       tab.charAt(0).toUpperCase() + tab.slice(1)}
+    </button>
+  ))}
+</nav>
 
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h4 className="font-semibold mb-2">🤖 AI Assistant</h4>
-            <p className="text-gray-600 text-sm">
-              Get AI-powered assistance for your Web3 journey
-            </p>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h4 className="font-semibold mb-2">💰 Social Rewards</h4>
-            <p className="text-gray-600 text-sm">
-              Earn tokens through social interactions
-            </p>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h4 className="font-semibold mb-2">🛡️ Bot Protection</h4>
-            <p className="text-gray-600 text-sm">
-              Advanced protection against bots
-            </p>
-          </div>
-        </div>
+      <main className="main-content">
+        {activeTab === 'dashboard' && <RewardsDashboard user={user} storageService={StorageService} />}
+        {activeTab === 'profile' && <UserProfile user={user} storageService={StorageService} />}
+        {activeTab === 'protection' && <BotProtection user={user} />}
       </main>
+
+      {showAIChat && (
+        <AIChat 
+          user={user}
+          onClose={() => setShowAIChat(false)}
+        />
+      )}
     </div>
   );
-};
-
-// Main App Component
-function App() {
-  return <AppContent />;
 }
 
 export default App;
