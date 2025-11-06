@@ -12,7 +12,11 @@
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "@solana/web3.js": "^1.87.6"
+    "@walletconnect/universal-provider": "^2.14.0",
+    "@walletconnect/types": "^2.14.0",
+    "@solana/web3.js": "^1.87.6",
+    "@solana/wallet-adapter-wallets": "^0.19.32",
+    "@solana/wallet-adapter-base": "^0.9.23"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
