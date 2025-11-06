@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { WalletProvider, useWallet } from './contexts/WalletContext';
 import AuthModal from './components/AuthModal';
 import UserProfile from './components/UserProfile';
 import AIChat from './components/AIChat';
@@ -133,91 +134,150 @@ const StorageService = {
   }
 };
 
-function App() {
+// المكون الرئيسي للتطبيق
+const AppContent = () => {
+  const { isConnected, publicKey, balance, walletName, connectWallet, disconnectWallet } = useWallet();
   const [user, setUser] = useState(null);
-  const [showAuthModal, setShowAuthModal] = useState(true);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showAIChat, setShowAIChat] = useState(false);
 
+  // مزامنة حالة المحفظة مع نظام المستخدم
   useEffect(() => {
-    const savedUser = StorageService.getCurrentUser();
-    if (savedUser) {
-      // تحديث streak عند الدخول
-      const newStreak = StorageService.updateStreak(savedUser.walletAddress);
+    if (isConnected && publicKey) {
+      const savedUser = StorageService.getCurrentUser();
       
-      setUser({
-        ...savedUser,
-        streak: newStreak || savedUser.streak
-      });
-      setShowAuthModal(false);
-      
-      // تسجيل نشاط الدخول
-      if (newStreak > 0) {
-        StorageService.saveActivity(savedUser.walletAddress, {
-          type: 'login',
-          description: `Daily login - Streak: ${newStreak} days`,
-          points: 10
+      if (savedUser && savedUser.walletAddress === publicKey) {
+        // المستخدم مسجل مسبقاً - تحديث البيانات
+        const newStreak = StorageService.updateStreak(publicKey);
+        setUser({
+          ...savedUser,
+          streak: newStreak || savedUser.streak
         });
-        StorageService.updatePoints(savedUser.walletAddress, 10);
+        
+        // تسجيل نشاط الدخول
+        if (newStreak > 0) {
+          StorageService.saveActivity(publicKey, {
+            type: 'login',
+            description: `Daily login - Streak: ${newStreak} days`,
+            points: 10
+          });
+          StorageService.updatePoints(publicKey, 10);
+        }
+      } else {
+        // مستخدم جديد - فتح مودال التسجيل
+        setShowAuthModal(true);
       }
+    } else {
+      // المحفظة غير متصلة
+      setUser(null);
+      setShowAuthModal(false);
     }
-  }, []);
+  }, [isConnected, publicKey]);
 
   const handleAuthSuccess = (userData) => {
     console.log('Authentication successful:', userData);
     
     const userWithStats = {
-      walletAddress: userData.address,
-      type: userData.type,
-      username: `user_${userData.address.slice(2, 8)}`
+      walletAddress: publicKey, // استخدام publicKey من المحفظة
+      type: 'solana', // BackPack هو محفظة Solana
+      username: userData.username || `user_${publicKey.slice(2, 8)}`,
+      walletName: walletName
     };
     
     // حفظ في التخزين المحلي
     StorageService.saveUser(userWithStats);
     
     // تحديث streak
-    const newStreak = StorageService.updateStreak(userData.address);
+    const newStreak = StorageService.updateStreak(publicKey);
     
     // تسجيل نشاط الدخول
-    StorageService.saveActivity(userData.address, {
+    StorageService.saveActivity(publicKey, {
       type: 'login',
       description: `User logged in successfully - Streak: ${newStreak} days`,
       points: 10
     });
     
     // تحديث النقاط
-    const newPoints = StorageService.updatePoints(userData.address, 10);
+    const newPoints = StorageService.updatePoints(publicKey, 10);
     
     // تحميل بيانات المستخدم المحدثة
-    const updatedUser = StorageService.getUser(userData.address);
+    const updatedUser = StorageService.getUser(publicKey);
     
     setUser(updatedUser);
     setShowAuthModal(false);
   };
 
   const handleLogout = () => {
+    disconnectWallet();
     setUser(null);
     localStorage.removeItem('carvfi_current_user');
     setShowAuthModal(true);
   };
 
-  if (showAuthModal) {
+  const handleConnectWallet = async () => {
+    try {
+      await connectWallet('backpack');
+    } catch (error) {
+      console.error('Failed to connect wallet:', error);
+    }
+  };
+
+  // إذا لم يكن هناك محفظة متصلة، عرض شاشة الترحيب
+  if (!isConnected) {
+    return (
+      <div className="app">
+        <div className="auth-background">
+          <div className="welcome-content">
+            <h1>🌐 CARVFi</h1>
+            <p>Web3 Social Platform on Carv SVM</p>
+            <div className="welcome-features">
+              <div className="feature">🤖 AI Assistant</div>
+              <div className="feature">💰 Rewards System</div>
+              <div className="feature">🛡️ Bot Protection</div>
+              <div className="feature">🎒 BackPack Support</div>
+            </div>
+            <button 
+              className="btn btn-primary connect-btn"
+              onClick={handleConnectWallet}
+            >
+              Connect BackPack Wallet
+            </button>
+            <p className="wallet-info">
+              Connect your BackPack wallet to start earning CARV rewards
+            </p>
+          </div>
+        </div>
+
+        {/* مودال المصادقة للبيانات الإضافية */}
+        <AuthModal 
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onAuthSuccess={handleAuthSuccess}
+          walletAddress={publicKey}
+        />
+      </div>
+    );
+  }
+
+  // إذا كان المستخدم متصلاً ولكن لم يكمل التسجيل
+  if (isConnected && !user) {
     return (
       <div className="app">
         <AuthModal 
           isOpen={true}
           onClose={() => {}} 
           onAuthSuccess={handleAuthSuccess}
+          walletAddress={publicKey}
         />
         <div className="auth-background">
           <div className="welcome-content">
             <h1>🌐 CARVFi</h1>
-            <p>Web3 Social Platform</p>
-            <div className="welcome-features">
-              <div className="feature">🤖 AI Assistant</div>
-              <div className="feature">💰 Rewards System</div>
-              <div className="feature">🛡️ Bot Protection</div>
-              <div className="feature">🔗 Multi-Chain Support</div>
+            <p>Complete your profile to continue</p>
+            <div className="connected-wallet">
+              <p>Connected: {publicKey?.slice(0, 8)}...{publicKey?.slice(-6)}</p>
+              <p>Wallet: {walletName}</p>
+              <p>Balance: {parseFloat(balance).toFixed(4)} CARV</p>
             </div>
           </div>
         </div>
@@ -225,6 +285,7 @@ function App() {
     );
   }
 
+  // الواجهة الرئيسية عندما يكون المستخدم متصلاً ومسجلاً
   return (
     <div className="app">
       <header className="header">
@@ -236,10 +297,13 @@ function App() {
         <div className="header-right">
           <div className="user-info">
             <span className="user-wallet">
-              {user?.walletAddress ? `${user.walletAddress.substring(0, 6)}...${user.walletAddress.substring(38)}` : 'No wallet'}
+              {publicKey ? `${publicKey.substring(0, 6)}...${publicKey.substring(publicKey.length - 4)}` : 'No wallet'}
             </span>
             <span className="network-badge">
-              {user?.type === 'evm' ? 'Ethereum' : 'Solana'}
+              {walletName || 'Solana'}
+            </span>
+            <span className="balance-info">
+              {parseFloat(balance).toFixed(4)} CARV
             </span>
             <span style={{fontSize: '0.7rem', color: '#10b981', marginTop: '2px'}}>
               {user?.points || 0} points | Streak: {user?.streak || 0} days
@@ -258,24 +322,23 @@ function App() {
       </header>
 
       <nav className="navigation">
-  {['dashboard', 'profile', 'protection', 'ai-assistant'].map(tab => (
-    <button
-      key={tab}
-      className={`nav-btn ${activeTab === tab ? 'active' : ''}`}
-      onClick={() => {
-        if (tab === 'ai-assistant') {
-          setShowAIAssistant(true);
-        } else {
-          setActiveTab(tab);
-        }
-      }}
-    >
-      {tab === 'dashboard' ? 'Dashboard' : 
-       tab === 'ai-assistant' ? 'AI Assistant' : 
-       tab.charAt(0).toUpperCase() + tab.slice(1)}
-    </button>
-  ))}
-</nav>
+        {['dashboard', 'profile', 'protection'].map(tab => (
+          <button
+            key={tab}
+            className={`nav-btn ${activeTab === tab ? 'active' : ''}`}
+            onClick={() => setActiveTab(tab)}
+          >
+            {tab === 'dashboard' ? 'Dashboard' : 
+             tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
+        <button
+          className={`nav-btn ${showAIChat ? 'active' : ''}`}
+          onClick={() => setShowAIChat(!showAIChat)}
+        >
+          AI Assistant
+        </button>
+      </nav>
 
       <main className="main-content">
         {activeTab === 'dashboard' && <RewardsDashboard user={user} storageService={StorageService} />}
@@ -290,6 +353,15 @@ function App() {
         />
       )}
     </div>
+  );
+};
+
+// المكون الرئيسي المغلف بالـ Provider
+function App() {
+  return (
+    <WalletProvider>
+      <AppContent />
+    </WalletProvider>
   );
 }
 
