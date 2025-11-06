@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { WalletProvider, useWallet } from './contexts/WalletContext';
 import AuthModal from './components/AuthModal';
+import RewardsDashboard from './components/RewardsDashboard';
+import UserProfile from './components/UserProfile';
 import './App.css';
 
 // خدمة تخزين محلية
@@ -98,6 +101,16 @@ const StorageService = {
     
     activities[userKey] = activities[userKey].slice(0, 50);
     localStorage.setItem('carvfi_activities', JSON.stringify(activities));
+  },
+
+  // دالة جديدة للتحقق من تسجيل الدخول
+  isUserLoggedIn: () => {
+    return !!localStorage.getItem('carvfi_current_user');
+  },
+
+  // دالة جديدة للحصول على بيانات المستخدم الحالي
+  getCurrentUserData: () => {
+    return StorageService.getCurrentUser();
   }
 };
 
@@ -106,6 +119,7 @@ const AppContent = () => {
   const [user, setUser] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isConnected && publicKey) {
@@ -169,6 +183,9 @@ const AppContent = () => {
     const updatedUser = StorageService.getUser(publicKey);
     setUser(updatedUser);
     setShowAuthModal(false);
+    
+    // الانتقال التلقائي إلى صفحة Rewards Dashboard
+    navigate('/rewards');
   };
 
   const handleConnectWallet = async () => {
@@ -183,6 +200,7 @@ const AppContent = () => {
     disconnectWallet();
     setUser(null);
     localStorage.removeItem('carvfi_current_user');
+    navigate('/');
   };
 
   // شاشة الترحيب قبل الربط
@@ -272,7 +290,7 @@ const AppContent = () => {
     );
   }
 
-  // الواجهة الرئيسية
+  // الواجهة الرئيسية للمستخدم المسجل
   if (isConnected && publicKey && user) {
     return (
       <div className="modern-app">
@@ -323,165 +341,65 @@ const AppContent = () => {
         {/* Navigation */}
         <nav className="modern-nav">
           <div className="nav-container">
-            {['dashboard', 'profile', 'rewards', 'social'].map(tab => (
-              <button
-                key={tab}
-                className={`nav-item ${activeTab === tab ? 'active' : ''}`}
-                onClick={() => setActiveTab(tab)}
-              >
-                <span className="nav-icon">
-                  {tab === 'dashboard' && '📊'}
-                  {tab === 'profile' && '👤'}
-                  {tab === 'rewards' && '💰'}
-                  {tab === 'social' && '🤝'}
-                </span>
-                <span className="nav-label">
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </span>
-              </button>
-            ))}
+            <button
+              className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('dashboard'); navigate('/'); }}
+            >
+              <span className="nav-icon">📊</span>
+              <span className="nav-label">Dashboard</span>
+            </button>
+            <button
+              className={`nav-item ${activeTab === 'rewards' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('rewards'); navigate('/rewards'); }}
+            >
+              <span className="nav-icon">💰</span>
+              <span className="nav-label">Rewards</span>
+            </button>
+            <button
+              className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('profile'); navigate('/profile'); }}
+            >
+              <span className="nav-icon">👤</span>
+              <span className="nav-label">Profile</span>
+            </button>
+            <button
+              className={`nav-item ${activeTab === 'social' ? 'active' : ''}`}
+              onClick={() => setActiveTab('social')}
+            >
+              <span className="nav-icon">🤝</span>
+              <span className="nav-label">Social</span>
+            </button>
           </div>
         </nav>
 
-        {/* Main Content */}
+        {/* Main Content with Routes */}
         <main className="modern-main">
           <div className="main-container">
-            
-            {/* Welcome Section */}
-            <div className="welcome-banner">
-              <div className="welcome-content">
-                <h2>Welcome back, {user.firstName}! 👋</h2>
-                <p>Ready to explore the world of Social Finance?</p>
-              </div>
-              <div className="stats-overview">
-                <div className="stat-item">
-                  <div className="stat-value">{user.points || 0}</div>
-                  <div className="stat-label">Points</div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-value">{user.streak || 0}</div>
-                  <div className="stat-label">Day Streak</div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-value">Lv. {user.level || 1}</div>
-                  <div className="stat-label">Level</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Dashboard Grid */}
-            <div className="dashboard-grid">
+            <Routes>
+              {/* Dashboard Route */}
+              <Route path="/" element={<DashboardView user={user} balance={balance} walletName={walletName} publicKey={publicKey} />} />
               
-              {/* Profile Card */}
-              <div className="dashboard-card profile-card">
-                <div className="card-header">
-                  <h3>👤 Personal Profile</h3>
-                  <span className="card-badge">Complete</span>
-                </div>
-                <div className="card-content">
-                  <div className="info-grid">
-                    <div className="info-item">
-                      <label>Email</label>
-                      <span>{user.email}</span>
-                    </div>
-                    {user.carvPlayUsername && (
-                      <div className="info-item">
-                        <label>Carv Play</label>
-                        <span>{user.carvPlayUsername}</span>
-                      </div>
-                    )}
-                    {user.twitter && (
-                      <div className="info-item">
-                        <label>Twitter</label>
-                        <span>{user.twitter}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Wallet Card */}
-              <div className="dashboard-card wallet-card">
-                <div className="card-header">
-                  <h3>💰 Wallet</h3>
-                  <span className="network-badge">Carv SVM</span>
-                </div>
-                <div className="card-content">
-                  <div className="wallet-info">
-                    <div className="balance-display">
-                      <div className="crypto-amount">{parseFloat(balance).toFixed(4)}</div>
-                      <div className="crypto-name">CARV</div>
-                    </div>
-                    <div className="wallet-details">
-                      <p className="wallet-type">Connected with {walletName}</p>
-                      <p className="wallet-address">{publicKey?.slice(0, 12)}...{publicKey?.slice(-8)}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Actions */}
-              <div className="dashboard-card actions-card">
-                <div className="card-header">
-                  <h3>⚡ Quick Actions</h3>
-                </div>
-                <div className="card-content">
-                  <div className="actions-grid">
-                    <button className="action-btn">
-                      <span className="action-icon">🤖</span>
-                      AI Assistant
-                    </button>
-                    <button className="action-btn">
-                      <span className="action-icon">💰</span>
-                      Earn Rewards
-                    </button>
-                    <button className="action-btn">
-                      <span className="action-icon">🛡️</span>
-                      Security Check
-                    </button>
-                    <button className="action-btn">
-                      <span className="action-icon">🌐</span>
-                      Social Feed
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Recent Activity */}
-              <div className="dashboard-card activity-card">
-                <div className="card-header">
-                  <h3>📈 Recent Activity</h3>
-                </div>
-                <div className="card-content">
-                  <div className="activity-list">
-                    <div className="activity-item">
-                      <div className="activity-icon">🎉</div>
-                      <div className="activity-content">
-                        <p>Account Created</p>
-                        <span>+50 points</span>
-                      </div>
-                    </div>
-                    <div className="activity-item">
-                      <div className="activity-icon">🔗</div>
-                      <div className="activity-content">
-                        <p>Wallet Connected</p>
-                        <span>Now</span>
-                      </div>
-                    </div>
-                    <div className="activity-item">
-                      <div className="activity-icon">🔥</div>
-                      <div className="activity-content">
-                        <p>Daily Login</p>
-                        <span>+10 points</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            </div>
+              {/* Rewards Dashboard Route */}
+              <Route path="/rewards" element={<RewardsDashboard user={user} />} />
+              
+              {/* User Profile Route */}
+              <Route path="/profile" element={<UserProfile user={user} />} />
+              
+              {/* Fallback to Dashboard */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
           </div>
         </main>
+
+        {/* Auth Modal */}
+        {showAuthModal && (
+          <AuthModal
+            isOpen={showAuthModal}
+            onClose={() => setShowAuthModal(false)}
+            onAuthSuccess={handleAuthSuccess}
+            walletAddress={publicKey}
+          />
+        )}
       </div>
     );
   }
@@ -489,11 +407,153 @@ const AppContent = () => {
   return null;
 };
 
+// Dashboard Component (المحتوى الأصلي)
+const DashboardView = ({ user, balance, walletName, publicKey }) => {
+  return (
+    <>
+      {/* Welcome Section */}
+      <div className="welcome-banner">
+        <div className="welcome-content">
+          <h2>Welcome back, {user.firstName}! 👋</h2>
+          <p>Ready to explore the world of Social Finance?</p>
+        </div>
+        <div className="stats-overview">
+          <div className="stat-item">
+            <div className="stat-value">{user.points || 0}</div>
+            <div className="stat-label">Points</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-value">{user.streak || 0}</div>
+            <div className="stat-label">Day Streak</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-value">Lv. {user.level || 1}</div>
+            <div className="stat-label">Level</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Dashboard Grid */}
+      <div className="dashboard-grid">
+        
+        {/* Profile Card */}
+        <div className="dashboard-card profile-card">
+          <div className="card-header">
+            <h3>👤 Personal Profile</h3>
+            <span className="card-badge">Complete</span>
+          </div>
+          <div className="card-content">
+            <div className="info-grid">
+              <div className="info-item">
+                <label>Email</label>
+                <span>{user.email}</span>
+              </div>
+              {user.carvPlayUsername && (
+                <div className="info-item">
+                  <label>Carv Play</label>
+                  <span>{user.carvPlayUsername}</span>
+                </div>
+              )}
+              {user.twitter && (
+                <div className="info-item">
+                  <label>Twitter</label>
+                  <span>{user.twitter}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Wallet Card */}
+        <div className="dashboard-card wallet-card">
+          <div className="card-header">
+            <h3>💰 Wallet</h3>
+            <span className="network-badge">Carv SVM</span>
+          </div>
+          <div className="card-content">
+            <div className="wallet-info">
+              <div className="balance-display">
+                <div className="crypto-amount">{parseFloat(balance).toFixed(4)}</div>
+                <div className="crypto-name">CARV</div>
+              </div>
+              <div className="wallet-details">
+                <p className="wallet-type">Connected with {walletName}</p>
+                <p className="wallet-address">{publicKey?.slice(0, 12)}...{publicKey?.slice(-8)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="dashboard-card actions-card">
+          <div className="card-header">
+            <h3>⚡ Quick Actions</h3>
+          </div>
+          <div className="card-content">
+            <div className="actions-grid">
+              <button className="action-btn">
+                <span className="action-icon">🤖</span>
+                AI Assistant
+              </button>
+              <button className="action-btn">
+                <span className="action-icon">💰</span>
+                Earn Rewards
+              </button>
+              <button className="action-btn">
+                <span className="action-icon">🛡️</span>
+                Security Check
+              </button>
+              <button className="action-btn">
+                <span className="action-icon">🌐</span>
+                Social Feed
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="dashboard-card activity-card">
+          <div className="card-header">
+            <h3>📈 Recent Activity</h3>
+          </div>
+          <div className="card-content">
+            <div className="activity-list">
+              <div className="activity-item">
+                <div className="activity-icon">🎉</div>
+                <div className="activity-content">
+                  <p>Account Created</p>
+                  <span>+50 points</span>
+                </div>
+              </div>
+              <div className="activity-item">
+                <div className="activity-icon">🔗</div>
+                <div className="activity-content">
+                  <p>Wallet Connected</p>
+                  <span>Now</span>
+                </div>
+              </div>
+              <div className="activity-item">
+                <div className="activity-icon">🔥</div>
+                <div className="activity-content">
+                  <p>Daily Login</p>
+                  <span>+10 points</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
 function App() {
   return (
-    <WalletProvider>
-      <AppContent />
-    </WalletProvider>
+    <Router>
+      <WalletProvider>
+        <AppContent />
+      </WalletProvider>
+    </Router>
   );
 }
 
