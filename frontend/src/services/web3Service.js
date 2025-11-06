@@ -1,4 +1,4 @@
-// Mock service for initial development
+// Carv SVM Testnet configuration
 export const CARV_SVM_CONFIG = {
   name: 'Carv SVM Testnet',
   url: 'https://svm.carv.io/chain',
@@ -16,10 +16,25 @@ export class CarvWeb3Service {
   }
 
   getAvailableWallets() {
-    return [
-      { name: 'BackPack', type: 'injected', icon: '🎒' },
-      { name: 'Phantom', type: 'injected', icon: '👻' }
-    ];
+    const wallets = [];
+    
+    if (typeof window !== 'undefined') {
+      if (window.backpack) {
+        wallets.push({ name: 'BackPack', type: 'injected', icon: '🎒' });
+      }
+      if (window.solana) {
+        wallets.push({ name: 'Solana', type: 'injected', icon: '🔷' });
+      }
+      if (window.phantom) {
+        wallets.push({ name: 'Phantom', type: 'injected', icon: '👻' });
+      }
+    }
+    
+    if (wallets.length === 0) {
+      wallets.push({ name: 'BackPack', type: 'injected', icon: '🎒' });
+    }
+    
+    return wallets;
   }
 
   async connectWallet(walletType = 'backpack') {
@@ -39,6 +54,10 @@ export class CarvWeb3Service {
   }
 
   async getBalance() {
+    if (!this.isConnected) {
+      throw new Error('Wallet not connected');
+    }
+    
     this.balance = (Math.random() * 10).toFixed(4);
     return this.balance;
   }
@@ -62,9 +81,10 @@ export class CarvWeb3Service {
   }
 
   isAnyWalletAvailable() {
-    return true;
+    return this.getAvailableWallets().length > 0;
   }
 }
 
+// Create and export default instance
 const web3Service = new CarvWeb3Service();
 export default web3Service;
