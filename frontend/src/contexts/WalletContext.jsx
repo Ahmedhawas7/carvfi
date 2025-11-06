@@ -1,4 +1,4 @@
-// src/contexts/WalletContext.jsx
+// frontend/src/contexts/WalletContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import web3Service from '../services/web3Service';
 
@@ -36,17 +36,11 @@ export const WalletProvider = ({ children }) => {
       setIsConnected(true);
       setPublicKey(status.publicKey);
       setWalletName(status.walletName);
-      
-      try {
-        const accountBalance = await web3Service.getBalance();
-        setBalance(accountBalance.toString());
-      } catch (error) {
-        console.error('Failed to get balance:', error);
-      }
+      setBalance(status.balance);
     }
   };
 
-  const connectWallet = async (walletType = 'walletconnect') => {
+  const connectWallet = async (walletType = 'direct') => {
     setIsLoading(true);
     setError(null);
     
@@ -60,7 +54,7 @@ export const WalletProvider = ({ children }) => {
         
         // Get initial balance
         const accountBalance = await web3Service.getBalance();
-        setBalance(accountBalance.toString());
+        setBalance(accountBalance);
       }
     } catch (error) {
       setError(error.message);
@@ -70,20 +64,24 @@ export const WalletProvider = ({ children }) => {
     }
   };
 
-  const disconnectWallet = () => {
-    web3Service.disconnectWallet();
-    setIsConnected(false);
-    setPublicKey(null);
-    setBalance('0');
-    setError(null);
-    setWalletName(null);
+  const disconnectWallet = async () => {
+    try {
+      await web3Service.disconnectWallet();
+      setIsConnected(false);
+      setPublicKey(null);
+      setBalance('0');
+      setError(null);
+      setWalletName(null);
+    } catch (error) {
+      console.error('Error disconnecting wallet:', error);
+    }
   };
 
   const refreshBalance = async () => {
     if (isConnected && publicKey) {
       try {
         const accountBalance = await web3Service.getBalance();
-        setBalance(accountBalance.toString());
+        setBalance(accountBalance);
       } catch (error) {
         console.error('Failed to refresh balance:', error);
       }
