@@ -86,74 +86,77 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess, walletAddress }) => {
   };
 
   const handleProfileSubmit = async (e) => {
-  e.preventDefault();
-  
-  if (!validateForm()) {
-    return;
-  }
-
-  setIsSubmitting(true);
-
-  try {
-    console.log('📝 Submitting profile data:', formData);
+    e.preventDefault();
     
-    // حفظ البيانات في localStorage مباشرة
-    const userData = {
-      address: walletAddress,
-      type: 'solana',
-      ...formData,
-      points: 50,
-      streak: 1,
-      level: 1,
-      loginCount: 1,
-      lastLogin: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      lastUpdated: new Date().toISOString()
-    };
-
-    // حفظ المستخدم في localStorage
-    const users = JSON.parse(localStorage.getItem('carvfi_users') || '{}');
-    const userKey = walletAddress?.toLowerCase();
-    users[userKey] = userData;
-    localStorage.setItem('carvfi_users', JSON.stringify(users));
-    localStorage.setItem('carvfi_current_user', JSON.stringify(userData));
-
-    // حفظ النشاط
-    const activities = JSON.parse(localStorage.getItem('carvfi_activities') || '{}');
-    if (!activities[userKey]) {
-      activities[userKey] = [];
-    }
-    activities[userKey].unshift({
-      id: Date.now().toString(),
-      type: 'registration',
-      description: 'New user registered successfully',
-      points: 50,
-      timestamp: new Date().toISOString()
-    });
-    localStorage.setItem('carvfi_activities', JSON.stringify(activities));
-
-    console.log('✅ User data saved successfully');
-
-    // استدعاء onAuthSuccess إذا كان موجوداً
-    if (onAuthSuccess) {
-      onAuthSuccess(userData);
-      console.log('✅ onAuthSuccess called successfully');
+    if (!validateForm()) {
+      return;
     }
 
-    // 🚀 الحل البديل - إعادة التوجيه بعد تأخير
-console.log('🚀 Redirecting after account creation...');
-setTimeout(() => {
-  // إعادة تحميل كاملة للصفحة الرئيسية
-  window.location.href = window.location.origin;
-}, 1000);
+    setIsSubmitting(true);
 
-  } catch (error) {
-    console.error('❌ Error creating account:', error);
-    setFormErrors({ submit: 'Failed to create account. Please try again.' });
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+    try {
+      console.log('📝 Submitting profile data:', formData);
+      
+      // حفظ البيانات في localStorage مباشرة
+      const userData = {
+        address: walletAddress,
+        type: 'solana',
+        ...formData,
+        points: 50,
+        streak: 1,
+        level: 1,
+        loginCount: 1,
+        lastLogin: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
+      };
+
+      // حفظ المستخدم في localStorage
+      const users = JSON.parse(localStorage.getItem('carvfi_users') || '{}');
+      const userKey = walletAddress?.toLowerCase();
+      users[userKey] = userData;
+      localStorage.setItem('carvfi_users', JSON.stringify(users));
+      localStorage.setItem('carvfi_current_user', JSON.stringify(userData));
+
+      // حفظ النشاط
+      const activities = JSON.parse(localStorage.getItem('carvfi_activities') || '{}');
+      if (!activities[userKey]) {
+        activities[userKey] = [];
+      }
+      activities[userKey].unshift({
+        id: Date.now().toString(),
+        type: 'registration',
+        description: 'New user registered successfully',
+        points: 50,
+        timestamp: new Date().toISOString()
+      });
+      localStorage.setItem('carvfi_activities', JSON.stringify(activities));
+
+      // 🚀 الحل النووي - تأكد من حفظ البيانات
+      console.log('🚀 Setting redirect flags...');
+      localStorage.setItem('carvfi_account_created', 'true');
+      localStorage.setItem('carvfi_redirect', 'true');
+      localStorage.setItem('carvfi_new_user', JSON.stringify(userData));
+
+      console.log('✅ User data saved successfully');
+
+      // استدعاء onAuthSuccess إذا كان موجوداً
+      if (onAuthSuccess) {
+        onAuthSuccess(userData);
+        console.log('✅ onAuthSuccess called successfully');
+      }
+
+      // إعادة تحميل فورية
+      console.log('🚀 Force reloading page...');
+      window.location.reload();
+
+    } catch (error) {
+      console.error('❌ Error creating account:', error);
+      setFormErrors({ submit: 'Failed to create account. Please try again.' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const generateRandomUsername = () => {
     const randomNum = Math.floor(Math.random() * 10000);
@@ -271,7 +274,7 @@ setTimeout(() => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Email Address *
-                    </label>
+                  </label>
                   <input
                     type="email"
                     value={formData.email}
