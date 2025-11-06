@@ -140,9 +140,12 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess, walletAddress }) => {
       console.log('✅ onAuthSuccess called successfully');
     }
 
-    // 🚀 الحل النهائي - إعادة تحميل كاملة للصفحة
-    console.log('🚀 Full page reload...');
-    window.location.href = window.location.origin; // إعادة تحميل كاملة من البداية
+    // 🚀 الحل البديل - إعادة التوجيه بعد تأخير
+console.log('🚀 Redirecting after account creation...');
+setTimeout(() => {
+  // إعادة تحميل كاملة للصفحة الرئيسية
+  window.location.href = window.location.origin;
+}, 1000);
 
   } catch (error) {
     console.error('❌ Error creating account:', error);
