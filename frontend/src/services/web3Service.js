@@ -1,155 +1,137 @@
-// frontend/src/services/web3Service.js
-import { ethers } from 'ethers';
+import { Connection, clusterApiUrl, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 
-// Carv network configuration
-export const CARV_NETWORK = {
-  chainId: '0x18297', // 98951 in hexadecimal
-  chainName: 'Carv SVM AI Agentic Chain',
-  rpcUrls: ['https://svm.carv.io/chain'],
-  blockExplorerUrls: ['https://explorer.carv.io/'],
-  nativeCurrency: {
-    name: 'CARV',
-    symbol: 'CARV',
-    decimals: 18
-  }
+// Carv SVM Testnet configuration
+export const CARV_SVM_CONFIG = {
+  name: 'Carv SVM Testnet',
+  url: 'https://svm.carv.io/chain',
+  chainId: 'carv-svm-testnet',
+  symbol: 'CARV',
+  explorer: 'https://explorer.carv.io/'
 };
 
-export class CarvWeb3Service {
+export class CarvSolanaService {
   constructor() {
-    this.provider = null;
-    this.signer = null;
+    this.connection = null;
+    this.wallet = null;
+    this.publicKey = null;
     this.isConnected = false;
-    this.currentAccount = null;
+    this.setupConnection();
   }
 
-  // Check if MetaMask is installed
-  isMetaMaskInstalled() {
-    return typeof window.ethereum !== 'undefined';
+  setupConnection() {
+    // Use Carv SVM RPC URL
+    this.connection = new Connection(CARV_SVM_CONFIG.url, 'confirmed');
   }
 
-  // Connect wallet function
+  // Check if BackPack is installed
+  isBackPackInstalled() {
+    return typeof window !== 'undefined' && !!window.backpack;
+  }
+
+  // Connect to BackPack wallet
   async connectWallet() {
-    if (!this.isMetaMaskInstalled()) {
-      throw new Error('Please install MetaMask to use this dApp');
+    if (!this.isBackPackInstalled()) {
+      throw new Error('Please install BackPack wallet to use this dApp');
     }
 
     try {
-      // Request account access
-      const accounts = await window.ethereum.request({
-        method: 'eth_requestAccounts'
-      });
+      // Request connection
+      const response = await window.backpack.connect();
       
-      // Switch to Carv network
-      await this.switchToCarvNetwork();
-      
-      // Setup ethers provider and signer
-      this.provider = new ethers.BrowserProvider(window.ethereum);
-      this.signer = await this.provider.getSigner();
+      this.wallet = window.backpack;
+      this.publicKey = new PublicKey(response.publicKey);
       this.isConnected = true;
-      this.currentAccount = accounts[0];
 
-      // Listen for account changes
-      this.setupEventListeners();
+      console.log('Connected to BackPack:', this.publicKey.toString());
 
       return {
         success: true,
-        address: accounts[0],
-        network: 'Carv SVM'
+        publicKey: this.publicKey.toString(),
+        network: CARV_SVM_CONFIG.name
       };
     } catch (error) {
-      console.error('Wallet connection failed:', error);
+      console.error('BackPack connection failed:', error);
       throw error;
     }
   }
 
-  // Switch to Carv network
-  async switchToCarvNetwork() {
-    try {
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: CARV_NETWORK.chainId }],
-      });
-    } catch (switchError) {
-      // If network not found, add it
-      if (switchError.code === 4902) {
-        try {
-          await window.ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [CARV_NETWORK],
-          });
-        } catch (addError) {
-          throw new Error('Failed to add Carv network to wallet');
-        }
-      } else {
-        throw switchError;
-      }
-    }
-  }
-
-  // Get wallet balance
-  async getBalance(address = null) {
-    if (!this.provider) throw new Error('Wallet not connected');
-    
-    const targetAddress = address || this.currentAccount;
-    const balance = await this.provider.getBalance(targetAddress);
-    return ethers.formatEther(balance);
-  }
-
-  // Get current network
-  async getNetwork() {
-    if (!this.provider) throw new Error('Wallet not connected');
-    return await this.provider.getNetwork();
-  }
-
   // Disconnect wallet
   disconnectWallet() {
-    this.provider = null;
-    this.signer = null;
+    this.wallet = null;
+    this.publicKey = null;
     this.isConnected = false;
-    this.currentAccount = null;
     
-    // Remove event listeners
-    if (window.ethereum) {
-      window.ethereum.removeAllListeners('accountsChanged');
-      window.ethereum.removeAllListeners('chainChanged');
+    if (window.backpack) {
+      window.backpack.disconnect();
     }
   }
 
-  // Setup event listeners for account/network changes
-  setupEventListeners() {
-    if (!window.ethereum) return;
+  // Get balance in CARV
+  async getBalance() {
+    if (!this.isConnected || !this.publicKey) {
+      throw new Error('Wallet not connected');
+    }
 
-    // Listen for account changes
-    window.ethereum.on('accountsChanged', (accounts) => {
-      if (accounts.length === 0) {
-        // User disconnected wallet
-        this.disconnectWallet();
-        window.dispatchEvent(new Event('walletDisconnected'));
-      } else {
-        // Account changed
-        this.currentAccount = accounts[0];
-        window.dispatchEvent(new CustomEvent('accountChanged', { 
-          detail: { address: accounts[0] } 
-        }));
-      }
-    });
-
-    // Listen for network changes
-    window.ethereum.on('chainChanged', (chainId) => {
-      window.location.reload(); // Reload on network change
-    });
+    try {
+      const balance = await this.connection.getBalance(this.publicKey);
+      return balance / LAMPORTS_PER_SOL; // Convert lamports to CARV
+    } catch (error) {
+      console.error('Failed to get balance:', error);
+      throw error;
+    }
   }
 
-  // Get current connection status
+  // Get transaction history
+  async getTransactions(limit = 10) {
+    if (!this.isConnected || !this.publicKey) {
+      throw new Error('Wallet not connected');
+    }
+
+    try {
+      const signatures = await this.connection.getSignaturesForAddress(this.publicKey, { limit });
+      return signatures;
+    } catch (error) {
+      console.error('Failed to get transactions:', error);
+      throw error;
+    }
+  }
+
+  // Send transaction (basic implementation)
+  async sendTransaction(toAddress, amount) {
+    if (!this.isConnected || !this.wallet) {
+      throw new Error('Wallet not connected');
+    }
+
+    try {
+      const transaction = await this.createTransferTransaction(toAddress, amount);
+      const signature = await this.wallet.signAndSendTransaction(transaction);
+      return signature;
+    } catch (error) {
+      console.error('Transaction failed:', error);
+      throw error;
+    }
+  }
+
+  async createTransferTransaction(toAddress, amount) {
+    // This is a simplified version - you'd need to implement actual transaction creation
+    // based on your specific requirements
+    return {
+      to: toAddress,
+      amount: amount * LAMPORTS_PER_SOL,
+      memo: 'CARVFi Social Transaction'
+    };
+  }
+
+  // Get connection status
   getConnectionStatus() {
     return {
       isConnected: this.isConnected,
-      address: this.currentAccount,
-      provider: this.provider
+      publicKey: this.publicKey ? this.publicKey.toString() : null,
+      network: CARV_SVM_CONFIG.name
     };
   }
 }
 
 // Create singleton instance
-const web3Service = new CarvWeb3Service();
-export default web3Service;
+const solanaService = new CarvSolanaService();
+export default solanaService;
