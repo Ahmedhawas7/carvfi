@@ -1,4 +1,3 @@
-// frontend/src/components/AuthModal.jsx
 import React, { useState } from 'react';
 import { useWallet } from '../contexts/WalletContext';
 
@@ -25,25 +24,30 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess, walletAddress }) => {
 
   const handleWalletConnect = async (walletType) => {
     try {
+      console.log(`🔗 Connecting to ${walletType}...`);
       const result = await connectWallet(walletType);
       if (result.success) {
+        console.log('✅ Wallet connected successfully');
         // نجاح الربط - نغلق المودال ونترك App.jsx يتعامل مع الباقي
         onClose();
       }
     } catch (error) {
-      console.error('Wallet connection failed:', error);
+      console.error('❌ Wallet connection failed:', error);
     }
   };
 
   const handleProfileSubmit = (e) => {
     e.preventDefault();
     
+    console.log('📝 Submitting profile data:', { username, profileData });
+    
     if (onAuthSuccess) {
       onAuthSuccess({
         address: walletAddress,
         type: 'solana',
         username: username || `user_${walletAddress.slice(2, 8)}`,
-        ...profileData
+        displayName: profileData.displayName,
+        bio: profileData.bio
       });
     }
     
@@ -52,7 +56,9 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess, walletAddress }) => {
 
   const generateRandomUsername = () => {
     const randomNum = Math.floor(Math.random() * 10000);
-    setUsername(`user_${randomNum}`);
+    const newUsername = `user_${randomNum}`;
+    setUsername(newUsername);
+    console.log('🎲 Generated random username:', newUsername);
   };
 
   // مودال إكمال الملف الشخصي
