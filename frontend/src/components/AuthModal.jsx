@@ -142,7 +142,7 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess, walletAddress }) => {
 
       // 🚀 الانتقال المباشر إلى صفحة Rewards Dashboard
       console.log('🚀 Redirecting to rewards dashboard...');
-      window.location.href = '/rewards';
+      window.location.href = '/';
 
     } catch (error) {
       console.error('❌ Error creating account:', error);
