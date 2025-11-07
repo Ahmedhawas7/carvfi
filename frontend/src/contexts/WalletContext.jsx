@@ -106,6 +106,7 @@ export const WalletProvider = ({ children }) => {
 
   const value = {
     walletAddress,
+    publicKey: walletAddress,
     isConnected,
     loading,
     error,

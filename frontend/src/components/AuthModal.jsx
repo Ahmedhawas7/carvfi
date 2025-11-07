@@ -1,9 +1,9 @@
-import React, { useState, useContext } from 'react';
-import { WalletContext } from '../contexts/WalletContext';
+import React, { useState } from 'react';
+import { useWallet } from '../contexts/WalletContext';
 import './AuthModal.css';
 
-const AuthModal = ({ isOpen, onClose }) => {
-  const { connectWallet, walletAddress } = useContext(WalletContext);
+const AuthModal = ({ isOpen, onClose, onLoginSuccess, walletAddress: initialWallet }) => {
+  const { connectWallet } = useWallet();
   const [activeTab, setActiveTab] = useState('login');
   const [formData, setFormData] = useState({
     email: '',
@@ -26,8 +26,10 @@ const AuthModal = ({ isOpen, onClose }) => {
 
   const handleWalletConnect = async () => {
     try {
-      await connectWallet();
-      setFormData(prev => ({ ...prev, wallet: walletAddress }));
+      const address = await connectWallet();
+      if (address) {
+        setFormData(prev => ({ ...prev, wallet: address }));
+      }
     } catch (error) {
       setMessage('Failed to connect wallet');
     }
@@ -43,11 +45,12 @@ const AuthModal = ({ isOpen, onClose }) => {
       const result = await response.json();
       
       if (result.success) {
-        localStorage.setItem('carvfi_user', JSON.stringify(result.data.user));
-        setMessage('Login successful! Redirecting...');
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
+        const userData = result.data.user;
+        localStorage.setItem('carvfi_current_user', JSON.stringify(userData));
+        setMessage('Login successful!');
+        if (onLoginSuccess) {
+          onLoginSuccess(userData);
+        }
       } else {
         setMessage(result.message || 'Login failed');
       }
@@ -75,11 +78,12 @@ const AuthModal = ({ isOpen, onClose }) => {
       const result = await response.json();
       
       if (result.success) {
-        localStorage.setItem('carvfi_user', JSON.stringify(result.data.user));
+        const userData = result.data.user;
+        localStorage.setItem('carvfi_current_user', JSON.stringify(userData));
         setMessage('Registration successful! Welcome to CARVFi.');
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
+        if (onLoginSuccess) {
+          onLoginSuccess(userData);
+        }
       } else {
         setMessage(result.message || 'Registration failed');
       }

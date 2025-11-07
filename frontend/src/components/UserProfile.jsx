@@ -13,7 +13,7 @@ const UserProfile = () => {
   }, []);
 
   const loadUserData = () => {
-    const savedUser = localStorage.getItem('carvfi_user');
+    const savedUser = localStorage.getItem('carvfi_current_user');
     if (savedUser) {
       const user = JSON.parse(savedUser);
       setUserData(user);
@@ -22,7 +22,7 @@ const UserProfile = () => {
         email: user.email || '',
         twitter: user.twitter || '',
         telegram: user.telegram || '',
-        wallet: user.wallet || ''
+        wallet: user.wallet || user.walletAddress || ''
       });
     }
   };
@@ -52,12 +52,11 @@ const UserProfile = () => {
     setMessage('');
 
     try {
-      // Simulate API call to update profile
       setTimeout(() => {
         const updatedUser = { ...userData, ...editForm };
         setUserData(updatedUser);
-        localStorage.setItem('carvfi_user', JSON.stringify(updatedUser));
-        
+        localStorage.setItem('carvfi_current_user', JSON.stringify(updatedUser));
+
         setMessage('Profile updated successfully!');
         setIsEditing(false);
         setLoading(false);
@@ -144,8 +143,8 @@ const UserProfile = () => {
               <div className="detail-item">
                 <label>Wallet Address</label>
                 <span className="wallet-address">
-                  {userData.wallet ? 
-                    `${userData.wallet.substring(0, 8)}...${userData.wallet.substring(userData.wallet.length - 6)}` 
+                  {(userData.wallet || userData.walletAddress) ?
+                    `${(userData.wallet || userData.walletAddress).substring(0, 8)}...${(userData.wallet || userData.walletAddress).substring((userData.wallet || userData.walletAddress).length - 6)}`
                     : 'Not connected'
                   }
                 </span>
